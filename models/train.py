@@ -82,38 +82,38 @@ class Training():
         print(f"Model and files pushed to Hugging Face Hub for epoch {epoch}: {self.repo_id}")
 
     def compute_metrics(self, eval_preds):
-      preds, labels = eval_preds
-      # Trong trường hợp mô hình trả về nhiều hơn logit dự đoán
-      if isinstance(preds, tuple):
-          preds = preds[0]
+        preds, labels = eval_preds
+        # Trong trường hợp mô hình trả về nhiều hơn logit dự đoán
+        if isinstance(preds, tuple):
+            preds = preds[0]
 
-      decoded_preds = self.process.tokenizer.batch_decode(preds, skip_special_tokens=True)
+        decoded_preds = self.process.tokenizer.batch_decode(preds, skip_special_tokens=True)
 
-      # Thay các gía trị -100 trong nhãn vì ta không giải mã chúng
-      labels = np.where(labels != -100, labels, self.process.tokenizer.pad_token_id)
-      decoded_labels = self.process.tokenizer.batch_decode(labels, skip_special_tokens=True)
+        # Thay các gía trị -100 trong nhãn vì ta không giải mã chúng
+        labels = np.where(labels != -100, labels, self.process.tokenizer.pad_token_id)
+        decoded_labels = self.process.tokenizer.batch_decode(labels, skip_special_tokens=True)
 
-      # Thực một một xố hậu xủ lý đơn giản
-      decoded_preds = [pred.strip() for pred in decoded_preds]
-      decoded_labels = [[label.strip()] for label in decoded_labels]
+        # Thực một một xố hậu xủ lý đơn giản
+        decoded_preds = [pred.strip() for pred in decoded_preds]
+        decoded_labels = [[label.strip()] for label in decoded_labels]
 
-      result = self.metric.compute(predictions=decoded_preds, references=decoded_labels)
-      return {"bleu": result["score"]}
+        result = self.metric.compute(predictions=decoded_preds, references=decoded_labels)
+        return {"bleu": result["score"]}
 
     def postprocess(self, predictions, labels):
-      predictions = predictions.cpu().numpy()
-      labels = labels.cpu().numpy()
+        predictions = predictions.cpu().numpy()
+        labels = labels.cpu().numpy()
 
-      decoded_preds = self.process.tokenizer.batch_decode(predictions, skip_special_tokens=True)
+        decoded_preds = self.process.tokenizer.batch_decode(predictions, skip_special_tokens=True)
 
-      # Thay -100 trong nhãn vì ta không thế giải mã chúng.
-      labels = np.where(labels != -100, labels, self.process.tokenizer.pad_token_id)
-      decoded_labels = self.process.tokenizer.batch_decode(labels, skip_special_tokens=True)
+        # Thay -100 trong nhãn vì ta không thế giải mã chúng.
+        labels = np.where(labels != -100, labels, self.process.tokenizer.pad_token_id)
+        decoded_labels = self.process.tokenizer.batch_decode(labels, skip_special_tokens=True)
 
-      # Thực hiện một số hậu xử lý đơn giản
-      decoded_preds = [pred.strip() for pred in decoded_preds]
-      decoded_labels = [[label.strip()] for label in decoded_labels]
-      return decoded_preds, decoded_labels
+        # Thực hiện một số hậu xử lý đơn giản
+        decoded_preds = [pred.strip() for pred in decoded_preds]
+        decoded_labels = [[label.strip()] for label in decoded_labels]
+        return decoded_preds, decoded_labels
 
     def fit(self, flag_step=False):
         progress_bar = tqdm(range(self.epochs * len(self.process.train_loader)))
